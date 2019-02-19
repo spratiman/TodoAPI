@@ -12,8 +12,54 @@ var app = Express();
 app.use(BodyParser.json());
 app.use(BodyParser.urlencoded({ extended: true }));
 
-var routes = require('./api/routes/todoListRoutes');
-routes(app)
+app.get("/tasks", (request, response) => {
+			collection.find({}).toArray((error, result) => {
+				if(error) {
+					return response.status(500).send(error);
+				}
+			response.send(result);
+			});
+});
+
+app.post("/tasks", (request, response) => {
+    collection.insert(request.body, (error, result) => {
+        if(error) {
+            return response.status(500).send(error);
+        }
+        response.send(result.result);
+    });
+});
+
+app.get("/tasks/:id", (request, response) => {
+    collection.findOne({ "_id": new ObjectId(request.params.id) }, (error, result) => {
+        if(error) {
+            return response.status(500).send(error);
+        }
+        response.send(result);
+    });
+});
+
+app.patch("/tasks/:id", (request, response) => {
+    collection.update({ "_id": new ObjectId(request.params.id) }, request.body, (error, result) => {
+        if(error) {
+            return response.status(500).send(error);
+        }
+        response.send(result);
+    });
+});
+
+app.delete("/tasks/:id", (request, response) => {
+    collection.deleteOne({ "_id": new ObjectId(request.params.id) }, (error, result) => {
+        if(error) {
+            return response.status(500).send(error);
+        }
+        response.send(result);
+    });
+});
+
+app.use(function(req, res) {
+	res.status(404).send({url: req.originalUrl + ' not found'})
+});
 
 var database, collection;
 
@@ -23,9 +69,8 @@ app.listen(3000, () => {
             throw error;
         }
         database = client.db(DATABASE_NAME);
-        collection = database.collection("people");
+        collection = database.collection("Task");
         console.log("Connected to `" + DATABASE_NAME + "`!");
+		console.log('todo list RESTful API server started on: ' + 3000);
     });
-
-console.log('todo list RESTful API server started on: ' + 3000);
 });
